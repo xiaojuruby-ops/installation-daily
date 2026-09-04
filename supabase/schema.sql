@@ -44,10 +44,25 @@ create policy "allow anon update reports" on public.daily_reports for update usi
 create policy "allow anon delete reports" on public.daily_reports for delete using (true);
 
 -- ============================================================
--- 存储桶（Storage Bucket）
--- 请在 Supabase 控制台 → Storage → New bucket：
---   名称:  report-photos
---   公开(Public):  勾选 ✅
--- 本平台会把照片上传到  report-photos/{projectId}/{时间戳}_{随机}.jpg
--- 公开读策略在 bucket 设为 Public 后默认生效，无需额外 SQL。
+-- 存储桶（Storage Bucket）—— 用 SQL 直接建，无需去 Storage UI 点
 -- ============================================================
+insert into storage.buckets (id, name, public)
+values ('report-photos', 'report-photos', true)
+on conflict (id) do update set public = true;
+
+-- 允许匿名上传/读取 report-photos 桶内照片
+drop policy if exists "anon upload report-photos" on storage.objects;
+create policy "anon upload report-photos"
+  on storage.objects for insert to anon
+  with check (bucket_id = 'report-photos');
+
+drop policy if exists "public read report-photos" on storage.objects;
+create policy "public read report-photos"
+  on storage.objects for select to anon
+  using (bucket_id = 'report-photos');
+
+drop policy if exists "anon delete report-photos" on storage.objects;
+create policy "anon delete report-photos"
+  on storage.objects for delete to anon
+  using (bucket_id = 'report-photos');
+
