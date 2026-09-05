@@ -38,6 +38,11 @@ alter table public.daily_reports enable row level security;
 
 create policy "allow anon read projects"   on public.projects      for select using (true);
 create policy "allow anon insert projects" on public.projects      for insert with check (true);
+-- 改名/删项目需要（缺这两条时，DELETE 会返回 204 但实际没删掉，PostgREST 静默行为）
+drop policy if exists "allow anon update projects" on public.projects;
+create policy "allow anon update projects" on public.projects for update using (true) with check (true);
+drop policy if exists "allow anon delete projects" on public.projects;
+create policy "allow anon delete projects" on public.projects for delete using (true);
 create policy "allow anon read reports"    on public.daily_reports for select using (true);
 create policy "allow anon insert reports" on public.daily_reports for insert with check (true);
 create policy "allow anon update reports" on public.daily_reports for update using (true) with check (true);
