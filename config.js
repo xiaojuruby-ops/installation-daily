@@ -6,7 +6,7 @@ window.CONFIG = {
   USE_SUPABASE: true,
   SUPABASE_URL: "https://fcpsjilfsugnkgcmwnhv.supabase.co",
   SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZjcHNqaWxmc3VnbmtnY213bmh2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUwOTc4MjIsImV4cCI6MjEwMDY3MzgyMn0.agq28E-kI1GC539Ampyz6kGKwHL6hAdN64ng6GYGHEM",
-  ADMIN_CODE: "admin888",    // 管理后台访问口令（上线前请改成强口令，或接入正式登录）
+  ADMIN_CODE: "ruby199836",  // 管理后台访问口令（上线前请改成强口令，或接入正式登录）
   APP_NAME: "安装日报平台",
   VERSION: "1.0",
 };

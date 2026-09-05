@@ -12,6 +12,25 @@
     return local.toISOString().slice(0, 10);
   }
 
+  // ---------- 轻量提示条（操作反馈，2.6 秒后自动消失）----------
+  function toast(text, isErr) {
+    let el = document.getElementById('__toast');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = '__toast';
+      el.style.cssText = 'position:fixed;left:50%;top:16px;transform:translateX(-50%);' +
+        'z-index:9999;padding:11px 20px;border-radius:10px;font-size:14px;line-height:1.4;' +
+        'box-shadow:0 6px 20px rgba(0,0,0,.18);max-width:88vw;text-align:center;display:none;';
+      document.body.appendChild(el);
+    }
+    el.textContent = text;
+    el.style.background = isErr ? '#c0392b' : '#1F3864';
+    el.style.color = '#fff';
+    el.style.display = 'block';
+    clearTimeout(el.__timer);
+    el.__timer = setTimeout(() => { el.style.display = 'none'; }, 2600);
+  }
+
   // ---------- 初始化 ----------
   async function init() {
     const isCloud = DB.mode === 'supabase';
@@ -48,10 +67,19 @@
 
     // 新建项目（上报）
     $('addProjectBtn').onclick = async () => {
-      const name = prompt('输入新项目名称：');
+      const name = (prompt('输入新项目名称：') || '').trim();
       if (!name) return;
-      await DB.addProject(name.trim());
-      await loadProjects($('projectSelect'), name.trim());
+      try {
+        await DB.addProject(name);
+        await loadProjects($('projectSelect'), name);
+        await loadProjects($('filterProject'));
+        toast('✅ 项目已创建并选中：' + name);
+      } catch (e) {
+        const msg = String(e && e.message || e);
+        toast(msg.indexOf('duplicate') >= 0 || msg.indexOf('unique') >= 0
+          ? '⚠️ 项目已存在，请直接在下拉框选择'
+          : '⚠️ 创建失败：' + msg, true);
+      }
     };
 
     // 照片选择
@@ -84,6 +112,7 @@
       try {
         await DB.addReport(payload);
         msg.textContent = '✅ 日报已提交！'; msg.className = 'msg ok';
+        toast('✅ 日报已提交（' + payload.reportDate + '，含 ' + pendingPhotos.length + ' 张照片）');
         $('todayWork').value = ''; $('tomorrowPlan').value = ''; $('issues').value = '';
         $('weather').value = ''; $('progress').value = '';
         pendingPhotos = []; renderPreview();
@@ -225,8 +254,13 @@
   window.__edit = (ri) => openEdit(filteredReports[ri]);
   window.__del = async (ri) => {
     if (!confirm('确认删除这条日报？')) return;
-    await DB.deleteReport(filteredReports[ri].id);
-    refreshList();
+    try {
+      await DB.deleteReport(filteredReports[ri].id);
+      await refreshList();
+      toast('✅ 已删除该条日报');
+    } catch (e) {
+      toast('⚠️ 删除失败：' + (e && e.message || e), true);
+    }
   };
 
   // ---------- 编辑弹窗 ----------
@@ -251,17 +285,22 @@
       </div>`;
     $('modal').classList.remove('hidden');
     $('e_save').onclick = async () => {
-      await DB.updateReport(currentEditId, {
-        techName: $('e_tech').value.trim(),
-        reportDate: $('e_date').value,
-        weather: $('e_weather').value.trim(),
-        todayWork: $('e_today').value.trim(),
-        tomorrowPlan: $('e_tomo').value.trim(),
-        progress: $('e_prog').value,
-        issues: $('e_iss').value.trim(),
-      });
-      $('modal').classList.add('hidden');
-      refreshList();
+      try {
+        await DB.updateReport(currentEditId, {
+          techName: $('e_tech').value.trim(),
+          reportDate: $('e_date').value,
+          weather: $('e_weather').value.trim(),
+          todayWork: $('e_today').value.trim(),
+          tomorrowPlan: $('e_tomo').value.trim(),
+          progress: $('e_prog').value,
+          issues: $('e_iss').value.trim(),
+        });
+        $('modal').classList.add('hidden');
+        await refreshList();
+        toast('✅ 修改已保存');
+      } catch (e) {
+        toast('⚠️ 保存失败：' + (e && e.message || e), true);
+      }
     };
     $('e_down').onclick = async () => {
       const n = await Exporter.downloadPhotosZip([r], (r.projectName || 'report') + '_' + r.reportDate);
