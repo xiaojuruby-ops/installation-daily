@@ -85,9 +85,23 @@
 
   <script src="vendor/xlsx.full.min.js"></script>
   <script src="vendor/jszip.min.js"></script>
-  <script src="config.js?v=20260904a"></script>
-  <script src="db.js?v=20260904a"></script>
-  <script src="export.js?v=20260904a"></script>
-  <script src="app.js?v=20260904a"></script>
+  <script>
+    // 页面脚本出错时，直接在页面顶部显示红字，方便排查（无需打开开发者工具）
+    window.addEventListener('error', function (e) {
+      var b = document.getElementById('errBanner');
+      if (!b) {
+        b = document.createElement('div');
+        b.id = 'errBanner';
+        b.className = 'banner-demo';
+        document.body.insertBefore(b, document.body.firstChild);
+      }
+      var file = (e.filename || '').split('/').pop() || '';
+      b.innerHTML = '⚠️ 页面脚本出错：' + (e.message || e.type) + (file ? '（' + file + '）' : '');
+    });
+  </script>
+  <script src="config.js?v=20260904b"></script>
+  <script src="db.js?v=20260904b"></script>
+  <script src="export.js?v=20260904b"></script>
+  <script src="app.js?v=20260904b"></script>
 </body>
 </html>
